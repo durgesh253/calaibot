@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CalAI Web Call Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+
+        button {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        #startCallBtn {
+            background: #667eea;
+            color: white;
+        }
+
+        #startCallBtn:hover:not(:disabled) {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        #stopCallBtn {
+            background: #f56565;
+            color: white;
+        }
+
+        #stopCallBtn:hover:not(:disabled) {
+            background: #e53e3e;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 101, 101, 0.4);
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .status.idle {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .status.connecting {
+            background: #fed7d7;
+            color: #c53030;
+            animation: pulse 1.5s infinite;
+        }
+
+        .status.connected {
+            background: #c6f6d5;
+            color: #2f855a;
+        }
+
+        .status.error {
+            background: #fed7d7;
+            color: #c53030;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .transcript-box {
+            margin-top: 20px;
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .transcript-box.active {
+            display: block;
+        }
+
+        .transcript-item {
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 6px;
+        }
+
+        .transcript-item.agent {
+            background: #e6fffa;
+            border-left: 3px solid #319795;
+        }
+
+        .transcript-item.user {
+            background: #faf5ff;
+            border-left: 3px solid #805ad5;
+        }
+
+        .transcript-role {
+            font-weight: 600;
+            font-size: 12px;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+
+        .transcript-content {
+            color: #2d3748;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .info-box {
+            background: #fff5f5;
+            border-left: 4px solid #fc8181;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #742a2a;
+        }
+
+        .info-box strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎙️ CalAI Web Call</h1>
+        <p class="subtitle">Test your web calling functionality</p>
+
+        <div class="info-box">
+            <strong>⚠️ Important:</strong>
+            You need a valid Agent ID from your Retell AI Dashboard to start a call.
+        </div>
+
+        <div class="input-group">
+            <label for="agentId">Agent ID</label>
+            <input 
+                type="text" 
+                id="agentId" 
+                placeholder="Enter your Retell AI Agent ID (e.g., agent_abc123...)"
+                value="agent_8e7412714271314dd96d857d07"
+            />
+        </div>
+
+        <div class="input-group">
+            <label for="apiUrl">Backend API URL</label>
+            <input 
+                type="text" 
+                id="apiUrl" 
+                placeholder="http://localhost:3003"
+                value="http://localhost:3003"
+            />
+        </div>
+
+        <div class="input-group">
+            <label for="authToken">Authorization Token (Optional for testing)</label>
+            <input 
+                type="text" 
+                id="authToken" 
+                placeholder="Your JWT token"
+            />
+        </div>
+
+        <div class="button-group">
+            <button id="startCallBtn">
+                <span>📞 Start Call</span>
+            </button>
+            <button id="stopCallBtn" disabled>
+                <span>❌ Stop Call</span>
+            </button>
+        </div>
+
+        <div id="status" class="status idle">
+            ⚪ Ready to start call
+        </div>
+
+        <div id="transcriptBox" class="transcript-box">
+            <h3 style="margin-bottom: 15px; color: #4a5568;">Live Transcript</h3>
+            <div id="transcriptContent"></div>
+        </div>
+    </div>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>
+
