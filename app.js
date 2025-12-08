@@ -64,8 +64,22 @@ async function createWebCall(agentId, apiUrl, authToken) {
         });
 
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Failed to create web call');
+            const contentType = response.headers.get('content-type');
+            let errorMessage = `HTTP ${response.status}: Failed to create web call`;
+            
+            // Only parse as JSON if response is JSON
+            if (contentType && contentType.includes('application/json')) {
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.message || errorMessage;
+                } catch (e) {
+                    // JSON parse failed, use default error
+                }
+            } else {
+                const text = await response.text();
+                errorMessage = `HTTP ${response.status}: ${text.substring(0, 100)}`;
+            }
+            throw new Error(errorMessage);
         }
 
         const data = await response.json();
