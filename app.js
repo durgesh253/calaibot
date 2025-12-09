@@ -6,10 +6,8 @@ const retellWebClient = new RetellWebClient();
 // Hardcoded Configuration
 const CONFIG = {
     agentId: 'agent_8e7412714271314dd96d857d07',
-    apiUrl: typeof window !== 'undefined' && window.location.hostname === 'localhost' 
-        ? 'http://localhost:3001'  // Vite proxy during development
-        : 'https://admin.calcounti.com',  // Your production backend
-    authToken: 'eyJhbGciOiJIUzI1NiIsInR0eWAiOiJKV1QifQ.eyJ1c2VySWQiOjMwMjgyLCJpYXQiOjE3NjUyNjE1NzMsImV4cCI6MTc3MDQ0NTU3M30.PxtrdEbYf9AjOJAgqIrX4yYWWJT8X4ilmTtSQ-iVz2U'
+    apiUrl: 'http://51.16.27.23:3001',  // Your actual backend URL
+    authToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjMwMjgyLCJpYXQiOjE3NjUyNjE1NzMsImV4cCI6MTc3MDQ0NTU3M30.PxtrdEbYf9AjOJAgqIrX4yYWWJT8X4ilmTtSQ-iVz2U'
 };
 
 // DOM Elements
