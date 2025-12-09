@@ -6,7 +6,7 @@ const retellWebClient = new RetellWebClient();
 // Hardcoded Configuration
 const CONFIG = {
     agentId: 'agent_8e7412714271314dd96d857d07',
-    apiUrl: 'http://51.16.27.23:3003',  // Backend is on port 3003
+    apiUrl: 'http://51.16.27.23:3001',  // Backend is running on port 3001
     authToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjMwMjgzLCJpYXQiOjE3NjUyNjQ1MTAsImV4cCI6MTc3MDQ0ODUxMH0.wZTeoxPGCZIi6g6Zq8B3QwVJjWgkeIpXZM3DDWcIdBw'
 };
 
