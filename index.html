@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CalAI Web Call Test</title>
+    <title>AI Voice Assistant</title>
     <style>
         * {
             margin: 0;
@@ -21,65 +21,297 @@
             padding: 20px;
         }
 
-        .container {
+        .content {
+            text-align: center;
+            color: white;
+            z-index: 1;
+        }
+
+        .content h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .content p {
+            font-size: 20px;
+            opacity: 0.9;
+        }
+
+        /* Floating Chat Widget */
+        .chat-widget {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1000;
+        }
+
+        .chat-bubble {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #e63946 0%, #c1121f 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .chat-bubble:hover {
+            transform: scale(1.1);
+            box-shadow: 0 10px 40px rgba(230, 57, 70, 0.5);
+        }
+
+        .chat-bubble.active {
+            animation: pulse-ring 2s infinite;
+        }
+
+        @keyframes pulse-ring {
+            0% {
+                box-shadow: 0 0 0 0 rgba(230, 57, 70, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 25px rgba(230, 57, 70, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(230, 57, 70, 0);
+            }
+        }
+
+        .chat-icon {
+            font-size: 36px;
+            color: white;
+        }
+
+        .waving-hand {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            font-size: 24px;
+            animation: wave 1s ease-in-out infinite;
+        }
+
+        @keyframes wave {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(20deg); }
+            75% { transform: rotate(-20deg); }
+        }
+
+        /* Chat Window */
+        .chat-window {
+            position: fixed;
+            bottom: 120px;
+            right: 30px;
+            width: 380px;
+            height: 550px;
             background: white;
             border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            padding: 40px;
-            max-width: 600px;
-            width: 100%;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.3);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            animation: slideUp 0.3s ease;
         }
 
-        h1 {
-            color: #667eea;
-            margin-bottom: 10px;
-            font-size: 32px;
-        }
-
-        .subtitle {
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 14px;
-        }
-
-        .input-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            color: #333;
-            font-weight: 600;
-            margin-bottom: 8px;
-            font-size: 14px;
-        }
-
-        input {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            font-size: 14px;
-            transition: all 0.3s;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        .button-group {
+        .chat-window.active {
             display: flex;
-            gap: 10px;
-            margin-top: 30px;
         }
 
-        button {
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #e63946 0%, #c1121f 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .chat-header-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .chat-header-avatar.talking {
+            animation: talk 0.5s ease-in-out infinite;
+        }
+
+        @keyframes talk {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+        }
+
+        .chat-header-info {
             flex: 1;
-            padding: 15px;
-            border: none;
+        }
+
+        .chat-header-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 3px;
+        }
+
+        .chat-header-status {
+            font-size: 13px;
+            opacity: 0.95;
+        }
+
+        .chat-close {
+            cursor: pointer;
+            font-size: 24px;
+            opacity: 0.9;
+            transition: opacity 0.2s;
+        }
+
+        .chat-close:hover {
+            opacity: 1;
+        }
+
+        .chat-body {
+            flex: 1;
+            padding: 20px;
+            background: #f8f9fa;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-welcome {
+            text-align: center;
+            color: #666;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+        }
+
+        .chat-welcome-icon {
+            font-size: 60px;
+            margin-bottom: 15px;
+        }
+
+        .chat-welcome h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .chat-welcome p {
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .call-animation {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            gap: 30px;
+        }
+
+        .call-animation.active {
+            display: flex;
+        }
+
+        .sound-wave {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            height: 100px;
+        }
+
+        .wave-bar {
+            width: 8px;
+            background: linear-gradient(135deg, #e63946 0%, #c1121f 100%);
             border-radius: 10px;
+            animation: wave-pulse 1.2s ease-in-out infinite;
+        }
+
+        .wave-bar:nth-child(1) {
+            animation-delay: 0s;
+        }
+
+        .wave-bar:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+
+        .wave-bar:nth-child(3) {
+            animation-delay: 0.2s;
+        }
+
+        .wave-bar:nth-child(4) {
+            animation-delay: 0.3s;
+        }
+
+        .wave-bar:nth-child(5) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes wave-pulse {
+            0%, 100% {
+                height: 20px;
+                opacity: 0.5;
+            }
+            50% {
+                height: 80px;
+                opacity: 1;
+            }
+        }
+
+        .call-status-text {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            text-align: center;
+            animation: fade-pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes fade-pulse {
+            0%, 100% {
+                opacity: 0.7;
+            }
+            50% {
+                opacity: 1;
+            }
+        }
+
+        .chat-footer {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: center;
+        }
+
+        .call-toggle-btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
@@ -87,117 +319,40 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 10px;
         }
 
-        button:disabled {
-            opacity: 0.5;
+        .call-toggle-btn.start {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .call-toggle-btn.start:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .call-toggle-btn.stop {
+            background: linear-gradient(135deg, #e63946 0%, #c1121f 100%);
+            color: white;
+        }
+
+        .call-toggle-btn.stop:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(230, 57, 70, 0.4);
+        }
+
+        .call-toggle-btn.connecting {
+            background: #fbbf24;
+            color: white;
             cursor: not-allowed;
         }
 
-        #startCallBtn {
-            background: #667eea;
-            color: white;
-        }
-
-        #startCallBtn:hover:not(:disabled) {
-            background: #5568d3;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        #stopCallBtn {
-            background: #f56565;
-            color: white;
-        }
-
-        #stopCallBtn:hover:not(:disabled) {
-            background: #e53e3e;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(245, 101, 101, 0.4);
-        }
-
-        .status {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        .status.idle {
-            background: #e2e8f0;
-            color: #4a5568;
-        }
-
-        .status.connecting {
-            background: #fed7d7;
-            color: #c53030;
-            animation: pulse 1.5s infinite;
-        }
-
-        .status.connected {
-            background: #c6f6d5;
-            color: #2f855a;
-        }
-
-        .status.error {
-            background: #fed7d7;
-            color: #c53030;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
-        }
-
-        .transcript-box {
-            margin-top: 20px;
-            background: #f7fafc;
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
-            padding: 15px;
-            max-height: 300px;
-            overflow-y: auto;
-            display: none;
-        }
-
-        .transcript-box.active {
-            display: block;
-        }
-
-        .transcript-item {
-            margin-bottom: 10px;
-            padding: 8px;
-            border-radius: 6px;
-        }
-
-        .transcript-item.agent {
-            background: #e6fffa;
-            border-left: 3px solid #319795;
-        }
-
-        .transcript-item.user {
-            background: #faf5ff;
-            border-left: 3px solid #805ad5;
-        }
-
-        .transcript-role {
-            font-weight: 600;
-            font-size: 12px;
-            margin-bottom: 4px;
-            text-transform: uppercase;
-        }
-
-        .transcript-content {
-            color: #2d3748;
-        }
-
-        .loading {
+        .spinner {
             display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,.3);
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,.3);
             border-radius: 50%;
             border-top-color: white;
             animation: spin 1s ease-in-out infinite;
@@ -207,77 +362,75 @@
             to { transform: rotate(360deg); }
         }
 
-        .info-box {
-            background: #fff5f5;
-            border-left: 4px solid #fc8181;
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 6px;
-            font-size: 13px;
-            color: #742a2a;
-        }
+        @media (max-width: 480px) {
+            .chat-window {
+                width: calc(100vw - 40px);
+                right: 20px;
+                bottom: 110px;
+            }
 
-        .info-box strong {
-            display: block;
-            margin-bottom: 5px;
+            .chat-widget {
+                right: 20px;
+                bottom: 20px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🎙️ CalAI Web Call</h1>
-        <p class="subtitle">Test your web calling functionality</p>
+    <div class="content">
+        <h1>Welcome to AI Assistant</h1>
+        <p>Click the chat icon to start a voice conversation</p>
+    </div>
 
-        <div class="info-box">
-            <strong>⚠️ Important:</strong>
-            You need a valid Agent ID from your Retell AI Dashboard to start a call.
+    <!-- Floating Chat Widget -->
+    <div class="chat-widget">
+        <!-- Chat Bubble Button -->
+        <div id="chatBubble" class="chat-bubble">
+            <div class="chat-icon">🤖</div>
+            <div class="waving-hand">👋</div>
         </div>
 
-        <div class="input-group">
-            <label for="agentId">Agent ID</label>
-            <input 
-                type="text" 
-                id="agentId" 
-                placeholder="Enter your Retell AI Agent ID (e.g., agent_abc123...)"
-                value="agent_8e7412714271314dd96d857d07"
-            />
-        </div>
+        <!-- Chat Window -->
+        <div id="chatWindow" class="chat-window">
+            <!-- Header -->
+            <div class="chat-header">
+                <div id="headerAvatar" class="chat-header-avatar">
+                    🤖
+                </div>
+                <div class="chat-header-info">
+                    <div class="chat-header-title">Cal AI Assistant</div>
+                    <div id="headerStatus" class="chat-header-status">Online - Ready to help</div>
+                </div>
+                <div class="chat-close" id="closeChat">✕</div>
+            </div>
 
-        <div class="input-group">
-            <label for="apiUrl">Backend API URL</label>
-            <input 
-                type="text" 
-                id="apiUrl" 
-                placeholder="http://localhost:3003"
-                value="http://localhost:3003"
-            />
-        </div>
+            <!-- Body -->
+            <div class="chat-body" id="chatBody">
+                <div id="chatWelcome" class="chat-welcome">
+                    <div class="chat-welcome-icon">🎙️</div>
+                    <h3>Voice Assistant Ready!</h3>
+                    <p>Click the "Start Call" button below to begin a voice conversation with our AI assistant.</p>
+                </div>
 
-        <div class="input-group">
-            <label for="authToken">Authorization Token (Optional for testing)</label>
-            <input 
-                type="text" 
-                id="authToken" 
-                placeholder="Your JWT token"
-            />
-        </div>
+                <div id="callAnimation" class="call-animation">
+                    <div class="sound-wave">
+                        <div class="wave-bar"></div>
+                        <div class="wave-bar"></div>
+                        <div class="wave-bar"></div>
+                        <div class="wave-bar"></div>
+                        <div class="wave-bar"></div>
+                    </div>
+                    <div class="call-status-text" id="callStatusText">Listening to you...</div>
+                </div>
+            </div>
 
-        <div class="button-group">
-            <button id="startCallBtn">
-                <span>📞 Start Call</span>
-            </button>
-            <button id="stopCallBtn" disabled>
-                <span>❌ Stop Call</span>
-            </button>
-        </div>
-
-        <div id="status" class="status idle">
-            ⚪ Ready to start call
-        </div>
-
-        <div id="transcriptBox" class="transcript-box">
-            <h3 style="margin-bottom: 15px; color: #4a5568;">Live Transcript</h3>
-            <div id="transcriptContent"></div>
+            <!-- Footer with Call Button -->
+            <div class="chat-footer">
+                <button id="callToggleBtn" class="call-toggle-btn start">
+                    <span>📞</span>
+                    <span>Start Call</span>
+                </button>
+            </div>
         </div>
     </div>
 

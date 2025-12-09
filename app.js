@@ -3,44 +3,49 @@ import { RetellWebClient } from 'retell-client-js-sdk';
 // Initialize Retell Web Client
 const retellWebClient = new RetellWebClient();
 
+// Hardcoded Configuration
+const CONFIG = {
+    agentId: 'agent_8e7412714271314dd96d857d07',
+    apiUrl: 'http://51.16.27.23:3001',
+    authToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjMwMjgyLCJpYXQiOjE3NjUyNjE1NzMsImV4cCI6MTc3MDQ0NTU3M30.PxtrdEbYf9AjOJAgqIrX4yYWWJT8X4ilmTtSQ-iVz2U'
+};
+
 // DOM Elements
-const startCallBtn = document.getElementById('startCallBtn');
-const stopCallBtn = document.getElementById('stopCallBtn');
-const statusDiv = document.getElementById('status');
-const transcriptBox = document.getElementById('transcriptBox');
-const transcriptContent = document.getElementById('transcriptContent');
-const agentIdInput = document.getElementById('agentId');
-const apiUrlInput = document.getElementById('apiUrl');
-const authTokenInput = document.getElementById('authToken');
+const chatBubble = document.getElementById('chatBubble');
+const chatWindow = document.getElementById('chatWindow');
+const closeChat = document.getElementById('closeChat');
+const callToggleBtn = document.getElementById('callToggleBtn');
+const headerStatus = document.getElementById('headerStatus');
+const headerAvatar = document.getElementById('headerAvatar');
+const chatWelcome = document.getElementById('chatWelcome');
+const callAnimation = document.getElementById('callAnimation');
+const callStatusText = document.getElementById('callStatusText');
+const chatBody = document.getElementById('chatBody');
 
 // State
 let isCallActive = false;
+let isChatOpen = false;
 
-// Update status
-function updateStatus(message, className) {
-    statusDiv.textContent = message;
-    statusDiv.className = `status ${className}`;
+// Toggle chat window
+function toggleChatWindow() {
+    isChatOpen = !isChatOpen;
+    if (isChatOpen) {
+        chatWindow.classList.add('active');
+    } else {
+        chatWindow.classList.remove('active');
+    }
 }
 
-// Add transcript
-function addTranscript(role, content) {
-    const item = document.createElement('div');
-    item.className = `transcript-item ${role}`;
-    
-    const roleSpan = document.createElement('div');
-    roleSpan.className = 'transcript-role';
-    roleSpan.textContent = role === 'agent' ? '🤖 Agent' : '👤 User';
-    
-    const contentDiv = document.createElement('div');
-    contentDiv.className = 'transcript-content';
-    contentDiv.textContent = content;
-    
-    item.appendChild(roleSpan);
-    item.appendChild(contentDiv);
-    transcriptContent.appendChild(item);
-    
-    // Auto scroll to bottom
-    transcriptBox.scrollTop = transcriptBox.scrollHeight;
+// Update status
+function updateStatus(message) {
+    headerStatus.textContent = message;
+}
+
+// Update call animation status
+function updateCallStatus(message) {
+    if (callStatusText) {
+        callStatusText.textContent = message;
+    }
 }
 
 // Create web call
@@ -90,34 +95,31 @@ async function createWebCall(agentId, apiUrl, authToken) {
     }
 }
 
+// Toggle call (start or stop)
+async function toggleCall() {
+    if (isCallActive) {
+        stopCall();
+    } else {
+        await startCall();
+    }
+}
+
 // Start call
 async function startCall() {
     try {
-        const agentId = agentIdInput.value.trim();
-        const apiUrl = apiUrlInput.value.trim();
-        const authToken = authTokenInput.value.trim();
-
-        if (!agentId) {
-            alert('Please enter an Agent ID');
-            return;
-        }
-
-        if (!apiUrl) {
-            alert('Please enter API URL');
-            return;
-        }
-
         // Update UI
-        startCallBtn.disabled = true;
-        startCallBtn.innerHTML = '<span class="loading"></span><span>Connecting...</span>';
-        updateStatus('🔄 Creating web call...', 'connecting');
+        callToggleBtn.className = 'call-toggle-btn connecting';
+        callToggleBtn.innerHTML = '<span class="spinner"></span><span>Connecting...</span>';
+        callToggleBtn.disabled = true;
+        chatBubble.classList.add('active');
+        updateStatus('Connecting...');
 
         // Create web call
-        console.log('Creating web call with agent:', agentId);
-        const callData = await createWebCall(agentId, apiUrl, authToken);
+        console.log('Creating web call with agent:', CONFIG.agentId);
+        const callData = await createWebCall(CONFIG.agentId, CONFIG.apiUrl, CONFIG.authToken);
         
         console.log('Web call created:', callData);
-        updateStatus('🔄 Starting call...', 'connecting');
+        updateStatus('Starting call...');
 
         // Start the call with Retell SDK
         await retellWebClient.startCall({
@@ -130,16 +132,24 @@ async function startCall() {
         
         // Update UI
         isCallActive = true;
-        stopCallBtn.disabled = false;
-        startCallBtn.innerHTML = '<span>📞 Start Call</span>';
-        updateStatus('✅ Call connected!', 'connected');
-        transcriptBox.classList.add('active');
+        callToggleBtn.disabled = false;
+        callToggleBtn.className = 'call-toggle-btn stop';
+        callToggleBtn.innerHTML = '<span>❌</span><span>End Call</span>';
+        updateStatus('On Call - Speaking...');
+        headerAvatar.classList.add('talking');
+        
+        // Show animation, hide welcome
+        chatWelcome.style.display = 'none';
+        callAnimation.classList.add('active');
+        updateCallStatus('Listening to you...');
         
     } catch (error) {
         console.error('Error starting call:', error);
-        updateStatus(`❌ Error: ${error.message}`, 'error');
-        startCallBtn.disabled = false;
-        startCallBtn.innerHTML = '<span>📞 Start Call</span>';
+        updateStatus('Connection failed');
+        callToggleBtn.disabled = false;
+        callToggleBtn.className = 'call-toggle-btn start';
+        callToggleBtn.innerHTML = '<span>📞</span><span>Start Call</span>';
+        chatBubble.classList.remove('active');
         
         // Show detailed error
         alert(`Failed to start call:\n${error.message}\n\nPlease check:\n1. Agent ID is valid\n2. Backend server is running\n3. Retell API key is configured`);
@@ -151,6 +161,17 @@ function stopCall() {
     try {
         retellWebClient.stopCall();
         console.log('Call stopped');
+        
+        // Update UI immediately
+        callToggleBtn.className = 'call-toggle-btn start';
+        callToggleBtn.innerHTML = '<span>📞</span><span>Start Call</span>';
+        chatBubble.classList.remove('active');
+        headerAvatar.classList.remove('talking');
+        updateStatus('Call ended - Ready for next call');
+        
+        // Hide animation, show welcome screen
+        callAnimation.classList.remove('active');
+        chatWelcome.style.display = 'flex';
     } catch (error) {
         console.error('Error stopping call:', error);
     }
@@ -159,42 +180,41 @@ function stopCall() {
 // Event listeners for Retell SDK
 retellWebClient.on('call_started', () => {
     console.log('📞 Call started');
-    updateStatus('✅ Call active', 'connected');
+    updateStatus('Call Active');
 });
 
 retellWebClient.on('call_ended', () => {
     console.log('📞 Call ended');
-    updateStatus('⚪ Call ended', 'idle');
+    updateStatus('Online - Ready to help');
     isCallActive = false;
-    startCallBtn.disabled = false;
-    stopCallBtn.disabled = true;
+    callToggleBtn.disabled = false;
+    callToggleBtn.className = 'call-toggle-btn start';
+    callToggleBtn.innerHTML = '<span>📞</span><span>Start Call</span>';
+    chatBubble.classList.remove('active');
+    headerAvatar.classList.remove('talking');
+    
+    // Hide animation, show welcome screen
+    callAnimation.classList.remove('active');
+    chatWelcome.style.display = 'flex';
 });
 
 retellWebClient.on('agent_start_talking', () => {
     console.log('🤖 Agent started talking');
-    updateStatus('🗣️ Agent speaking...', 'connected');
+    updateStatus('🗣️ AI is speaking...');
+    updateCallStatus('🗣️ AI is speaking...');
+    headerAvatar.classList.add('talking');
 });
 
 retellWebClient.on('agent_stop_talking', () => {
     console.log('🤖 Agent stopped talking');
-    updateStatus('👂 Listening...', 'connected');
+    updateStatus('👂 Listening to you...');
+    updateCallStatus('👂 Listening to you...');
+    headerAvatar.classList.remove('talking');
 });
 
 retellWebClient.on('update', (update) => {
     console.log('📝 Update:', update);
-    
-    // Display transcript
-    if (update.transcript && Array.isArray(update.transcript)) {
-        // Clear previous transcript
-        transcriptContent.innerHTML = '';
-        
-        // Add all transcript items
-        update.transcript.forEach(item => {
-            if (item.content && item.content.trim()) {
-                addTranscript(item.role, item.content);
-            }
-        });
-    }
+    // Update events are logged but we're showing animation instead of transcript
 });
 
 retellWebClient.on('metadata', (metadata) => {
@@ -203,17 +223,25 @@ retellWebClient.on('metadata', (metadata) => {
 
 retellWebClient.on('error', (error) => {
     console.error('❌ An error occurred:', error);
-    updateStatus(`❌ Error: ${error.message || 'Unknown error'}`, 'error');
+    updateStatus('Error occurred');
     
     // Stop the call
     retellWebClient.stopCall();
-    startCallBtn.disabled = false;
-    stopCallBtn.disabled = true;
+    callToggleBtn.disabled = false;
+    callToggleBtn.className = 'call-toggle-btn start';
+    callToggleBtn.innerHTML = '<span>📞</span><span>Start Call</span>';
+    chatBubble.classList.remove('active');
+    headerAvatar.classList.remove('talking');
+    
+    // Hide animation, show welcome screen
+    callAnimation.classList.remove('active');
+    chatWelcome.style.display = 'flex';
 });
 
-// Button event listeners
-startCallBtn.addEventListener('click', startCall);
-stopCallBtn.addEventListener('click', stopCall);
+// Chat widget event listeners
+chatBubble.addEventListener('click', toggleChatWindow);
+closeChat.addEventListener('click', toggleChatWindow);
+callToggleBtn.addEventListener('click', toggleCall);
 
 // Log SDK version
 console.log('Retell Web Client SDK loaded');
