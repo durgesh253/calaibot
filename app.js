@@ -6,7 +6,7 @@ const retellWebClient = new RetellWebClient();
 // Hardcoded Configuration
 const CONFIG = {
     agentId: 'agent_8e7412714271314dd96d857d07',
-    apiUrl: '/api',  // Use Vite proxy locally to avoid CORS; set to full URL in production if needed
+    apiUrl: '/api/web-call',
     authToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjMwMjgzLCJpYXQiOjE3NjUyNjQ1MTAsImV4cCI6MTc3MDQ0ODUxMH0.wZTeoxPGCZIi6g6Zq8B3QwVJjWgkeIpXZM3DDWcIdBw'
 };
 
@@ -60,7 +60,7 @@ async function createWebCall(agentId, apiUrl, authToken) {
             headers['Authorization'] = `Bearer ${authToken}`;
         }
         
-        const response = await fetch(`${apiUrl}/web-call/create`, {
+        const response = await fetch(`${apiUrl}/create`, {
             method: 'POST',
             headers: headers,
             credentials: 'include',
