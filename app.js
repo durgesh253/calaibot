@@ -6,8 +6,8 @@ const retellWebClient = new RetellWebClient();
 // Hardcoded Configuration
 const CONFIG = {
     agentId: 'agent_8e7412714271314dd96d857d07',
-    apiUrl: 'http://51.16.27.23:3001',  // Your actual backend URL
-    authToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjMwMjgyLCJpYXQiOjE3NjUyNjE1NzMsImV4cCI6MTc3MDQ0NTU3M30.PxtrdEbYf9AjOJAgqIrX4yYWWJT8X4ilmTtSQ-iVz2U'
+    apiUrl: 'http://51.16.27.23:3003',  // Backend is on port 3003
+    authToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjMwMjgzLCJpYXQiOjE3NjUyNjQ1MTAsImV4cCI6MTc3MDQ0ODUxMH0.wZTeoxPGCZIi6g6Zq8B3QwVJjWgkeIpXZM3DDWcIdBw'
 };
 
 // DOM Elements
@@ -63,6 +63,7 @@ async function createWebCall(agentId, apiUrl, authToken) {
         const response = await fetch(`${apiUrl}/web-call/create`, {
             method: 'POST',
             headers: headers,
+            credentials: 'include',
             body: JSON.stringify({
                 agent_id: agentId
             })
