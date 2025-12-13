@@ -7,33 +7,40 @@ const retellWebClient = new RetellWebClient();
 const CONFIG = {
     agentId: 'agent_8e7412714271314dd96d857d07',
     apiUrl: '/api/web-call',
-    authToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjMwMjgzLCJpYXQiOjE3NjUyNjQ1MTAsImV4cCI6MTc3MDQ0ODUxMH0.wZTeoxPGCZIi6g6Zq8B3QwVJjWgkeIpXZM3DDWcIdBw'
+    authToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjMwMjkyLCJpYXQiOjE3NjU2MDQ5NDcsImV4cCI6MTc3MDc4ODk0N30.QaEC6jMxat4nla56avNs8bXzbRwuW4F-scCfVb6UNkA'
 };
 
 // DOM Elements
 const chatBubble = document.getElementById('chatBubble');
 const chatWindow = document.getElementById('chatWindow');
 const closeChat = document.getElementById('closeChat');
-const callToggleBtn = document.getElementById('callToggleBtn');
+const micButton = document.getElementById('micButton');
 const headerStatus = document.getElementById('headerStatus');
 const headerAvatar = document.getElementById('headerAvatar');
 const chatWelcome = document.getElementById('chatWelcome');
-const callAnimation = document.getElementById('callAnimation');
+const voiceScreen = document.getElementById('voiceScreen');
 const callStatusText = document.getElementById('callStatusText');
 const chatBody = document.getElementById('chatBody');
 
 // State
 let isCallActive = false;
-let isChatOpen = false;
+let isChatOpen = true; // Start open
+let isOnVoiceScreen = false; // Track which screen we're on
 
-// Toggle chat window
-function toggleChatWindow() {
-    isChatOpen = !isChatOpen;
-    if (isChatOpen) {
-        chatWindow.classList.add('active');
-    } else {
-        chatWindow.classList.remove('active');
-    }
+// Navigate to voice screen
+function showVoiceScreen() {
+    chatWelcome.style.display = 'none';
+    voiceScreen.style.display = 'flex';
+    chatBubble.classList.add('hidden');
+    isOnVoiceScreen = true;
+}
+
+// Navigate back to home screen
+function showHomeScreen() {
+    chatWelcome.style.display = 'flex';
+    voiceScreen.style.display = 'none';
+    chatBubble.classList.remove('hidden');
+    isOnVoiceScreen = false;
 }
 
 // Update status
@@ -45,6 +52,17 @@ function updateStatus(message) {
 function updateCallStatus(message) {
     if (callStatusText) {
         callStatusText.textContent = message;
+    }
+}
+
+// Toggle microphone button state
+function toggleMicButton(isRecording) {
+    if (micButton) {
+        if (isRecording) {
+            micButton.classList.add('recording');
+        } else {
+            micButton.classList.remove('recording');
+        }
     }
 }
 
@@ -109,9 +127,6 @@ async function toggleCall() {
 async function startCall() {
     try {
         // Update UI
-        callToggleBtn.className = 'call-toggle-btn connecting';
-        callToggleBtn.innerHTML = '<span class="spinner"></span><span>Connecting...</span>';
-        callToggleBtn.disabled = true;
         chatBubble.classList.add('active');
         updateStatus('Connecting...');
 
@@ -133,23 +148,16 @@ async function startCall() {
         
         // Update UI
         isCallActive = true;
-        callToggleBtn.disabled = false;
-        callToggleBtn.className = 'call-toggle-btn stop';
-        callToggleBtn.innerHTML = '<span>❌</span><span>End Call</span>';
         updateStatus('On Call - Speaking...');
         headerAvatar.classList.add('talking');
         
-        // Show animation, hide welcome
-        chatWelcome.style.display = 'none';
-        callAnimation.classList.add('active');
-        updateCallStatus('Listening to you...');
+        // Already on voice screen, just update animation
+        updateCallStatus('התחלת להקליט אודיו בקול');
+        toggleMicButton(true);
         
     } catch (error) {
         console.error('Error starting call:', error);
         updateStatus('Connection failed');
-        callToggleBtn.disabled = false;
-        callToggleBtn.className = 'call-toggle-btn start';
-        callToggleBtn.innerHTML = '<span>📞</span><span>Start Call</span>';
         chatBubble.classList.remove('active');
         
         // Show detailed error
@@ -164,15 +172,14 @@ function stopCall() {
         console.log('Call stopped');
         
         // Update UI immediately
-        callToggleBtn.className = 'call-toggle-btn start';
-        callToggleBtn.innerHTML = '<span>📞</span><span>Start Call</span>';
+        isCallActive = false;
         chatBubble.classList.remove('active');
         headerAvatar.classList.remove('talking');
-        updateStatus('Call ended - Ready for next call');
+        updateStatus('Online - Ready to help');
+        toggleMicButton(false);
         
-        // Hide animation, show welcome screen
-        callAnimation.classList.remove('active');
-        chatWelcome.style.display = 'flex';
+        // Go back to home screen
+        showHomeScreen();
     } catch (error) {
         console.error('Error stopping call:', error);
     }
@@ -188,29 +195,28 @@ retellWebClient.on('call_ended', () => {
     console.log('📞 Call ended');
     updateStatus('Online - Ready to help');
     isCallActive = false;
-    callToggleBtn.disabled = false;
-    callToggleBtn.className = 'call-toggle-btn start';
-    callToggleBtn.innerHTML = '<span>📞</span><span>Start Call</span>';
     chatBubble.classList.remove('active');
     headerAvatar.classList.remove('talking');
+    toggleMicButton(false);
     
-    // Hide animation, show welcome screen
-    callAnimation.classList.remove('active');
-    chatWelcome.style.display = 'flex';
+    // Go back to home screen
+    showHomeScreen();
 });
 
 retellWebClient.on('agent_start_talking', () => {
     console.log('🤖 Agent started talking');
     updateStatus('🗣️ AI is speaking...');
-    updateCallStatus('🗣️ AI is speaking...');
+    updateCallStatus('🗣️ AI מדבר עכשיו...');
     headerAvatar.classList.add('talking');
+    toggleMicButton(false);
 });
 
 retellWebClient.on('agent_stop_talking', () => {
     console.log('🤖 Agent stopped talking');
     updateStatus('👂 Listening to you...');
-    updateCallStatus('👂 Listening to you...');
+    updateCallStatus('👂 אנחנו מקשיבים לך...');
     headerAvatar.classList.remove('talking');
+    toggleMicButton(true);
 });
 
 retellWebClient.on('update', (update) => {
@@ -228,21 +234,34 @@ retellWebClient.on('error', (error) => {
     
     // Stop the call
     retellWebClient.stopCall();
-    callToggleBtn.disabled = false;
-    callToggleBtn.className = 'call-toggle-btn start';
-    callToggleBtn.innerHTML = '<span>📞</span><span>Start Call</span>';
+    isCallActive = false;
     chatBubble.classList.remove('active');
     headerAvatar.classList.remove('talking');
+    toggleMicButton(false);
     
-    // Hide animation, show welcome screen
-    callAnimation.classList.remove('active');
-    chatWelcome.style.display = 'flex';
+    // Go back to home screen
+    showHomeScreen();
 });
 
 // Chat widget event listeners
-chatBubble.addEventListener('click', toggleChatWindow);
-closeChat.addEventListener('click', toggleChatWindow);
-callToggleBtn.addEventListener('click', toggleCall);
+chatBubble.addEventListener('click', () => {
+    // Navigate to voice screen when clicking floating icon
+    showVoiceScreen();
+});
+
+closeChat.addEventListener('click', () => {
+    // Go back to home screen when closing
+    showHomeScreen();
+    // Stop call if active
+    if (isCallActive) {
+        stopCall();
+    }
+});
+
+// Mic button listener - same as call toggle
+if (micButton) {
+    micButton.addEventListener('click', toggleCall);
+}
 
 // Log SDK version
 console.log('Retell Web Client SDK loaded');
